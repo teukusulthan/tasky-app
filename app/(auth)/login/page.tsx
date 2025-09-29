@@ -16,7 +16,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-md sm:max-w-lg">
         <CardHeader className="space-y-2">
           <CardTitle className="text-2xl text-primary font-bold">
-            Login to
+            Login to <span className="text-zinc-200 font-extrabold">tasky</span>
+            .
           </CardTitle>
           <CardDescription>
             Enter your email below to log in to your account.
@@ -51,8 +52,8 @@ export default function LoginPage() {
           <p className="text-sm text-muted-foreground">
             Don’t have an account?{" "}
             <a
-              className="text-zinc-200 underline-offset-4 hover:underline hover:underline "
-              href="/auth/register"
+              className="text-zinc-200 underline-offset-4 hover:underline  "
+              href="/register"
             >
               Create account
             </a>

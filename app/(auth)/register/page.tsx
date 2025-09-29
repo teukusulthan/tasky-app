@@ -15,9 +15,9 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md sm:max-w-lg">
         <CardHeader className="space-y-2">
-          <CardTitle className="text-2xl font-bold">
+          <CardTitle className="text-2xl font-bold text-primary">
             Register to{" "}
-            <span className="text-primary font-extrabold">tasky.</span>
+            <span className="text-zinc-200 font-extrabold">tasky</span>.
           </CardTitle>
           <CardDescription>
             Enter your email below to log in to your account.
@@ -30,7 +30,7 @@ export default function LoginPage() {
             <Input
               type="name"
               id="name"
-              placeholder="ex: John Doe"
+              placeholder="John Doe"
               autoComplete="given-name"
               required
             />
@@ -40,7 +40,7 @@ export default function LoginPage() {
             <Label htmlFor="email">Email</Label>
             <Input
               type="email"
-              autoComplete="email"
+              autoComplete="john@tasky.com"
               id="email"
               placeholder="Enter your email"
               required
@@ -73,7 +73,7 @@ export default function LoginPage() {
             Already have an account?{" "}
             <a
               className=" text-neutral-200 underline-offset-4 hover:text-white hover:underline"
-              href="/auth/login"
+              href="/login"
             >
               Login
             </a>
