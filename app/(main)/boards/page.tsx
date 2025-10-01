@@ -1,14 +1,53 @@
+"use client";
+
+import { useState, useEffect } from "react";
 import {
   Card,
   CardTitle,
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
-
+import supabase from "@/lib/supabase-client";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Database } from "@/types/database.types";
+type Board = Database["public"]["Tables"]["boards"]["Row"];
 
 export default function Boards() {
+  const [boards, setBoards] = useState<Board[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBoards = async () => {
+      setLoading(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setBoards([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("boards")
+        .select("*")
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error fetching boards:", error.message);
+      } else {
+        setBoards(data || []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchBoards();
+  }, []);
+
   return (
     <div className="w-full min-h-screen px-10 pt-10">
       {/* Headers */}
@@ -31,19 +70,14 @@ export default function Boards() {
 
       {/* Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-        {Array.from({ length: 6 }).map((_, i) => (
+        {boards.map((board) => (
           <Card
+            key={board.id}
             className="cursor-pointer hover:bg-muted/30 hover:scale-105 transition-all duration-500"
-            key={i}
           >
             <CardContent>
-              <CardTitle> Board {i + 1} </CardTitle>
-              <CardDescription>
-                Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                Possimus, illum nemo? Eaque magnam perferendis, porro quia vitae
-                provident dicta voluptates est vero numquam rem, ad obcaecati.
-                Modi veniam eaque cum!
-              </CardDescription>
+              <CardTitle> {board.title} </CardTitle>
+              <CardDescription>{board.description}</CardDescription>
             </CardContent>
           </Card>
         ))}
