@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Card,
   CardContent,
@@ -7,10 +9,42 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { LoginPayload, loginSchema } from "@/schemas/auth.schema";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormLabel,
+  FormMessage,
+  FormItem,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import supabase from "@/lib/supabase-client";
+import { redirect } from "next/navigation";
+import { toast } from "sonner";
 
 export default function LoginPage() {
+  const loginForm = useForm({
+    resolver: zodResolver(loginSchema),
+    mode: "onChange",
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const loginSubmit = async (val: LoginPayload) => {
+    const { error, data } = await supabase.auth.signInWithPassword({
+      email: val.email,
+      password: val.password,
+    });
+    toast.success(`${data.user?.email} is succesfully logged in`);
+    redirect("/boards");
+  };
+
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 py-8">
       <Card className="w-full max-w-md sm:max-w-lg">
@@ -25,27 +59,44 @@ export default function LoginPage() {
         </CardHeader>
 
         <CardContent className="space-y-4">
-          <div className="space-y-1">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              type="email"
-              id="email"
-              placeholder="Enter your email"
-              autoComplete="email"
-              required
+          <Form {...loginForm}>
+            <FormField
+              control={loginForm.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      placeholder="enter your email"
+                      required
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-
-          <div className="space-y-1">
-            <Label htmlFor="password">Password</Label>
-            <Input
-              type="password"
-              id="password"
-              placeholder="Enter your password"
-              autoComplete="current-password"
-              required
+            <FormField
+              control={loginForm.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      placeholder="enter your password"
+                      required
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
+          </Form>
         </CardContent>
 
         <CardFooter className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
@@ -58,7 +109,12 @@ export default function LoginPage() {
               Create account
             </a>
           </p>
-          <Button className="w-full sm:w-auto px-8">Login</Button>
+          <Button
+            onClick={loginForm.handleSubmit(loginSubmit)}
+            className="w-full sm:w-auto px-8"
+          >
+            Login
+          </Button>
         </CardFooter>
       </Card>
     </div>
