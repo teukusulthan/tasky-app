@@ -5,7 +5,6 @@ import {
 } from "@dnd-kit/core";
 import { COLUMN_PREFIX } from "./constants";
 
-// prioritas ke area kolom (drop saat kosong)
 export const columnFirstCollision: CollisionDetection = (args) => {
   const pointerHits = pointerWithin(args);
   if (pointerHits.length) {

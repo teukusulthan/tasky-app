@@ -33,32 +33,35 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useUserStore } from "@/stores/user.store";
 
 type Board = Database["public"]["Tables"]["boards"]["Row"];
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
-  const [fullName, setFullName] = useState<string>("");
+
+  const fullName = useUserStore((s) => s.profile?.full_name ?? "");
+  const loadProfile = useUserStore((s) => s.loadProfile);
+  const userLoading = useUserStore((s) => s.loading);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
         setLoading(true);
-        const [rows, profile] = await Promise.all([
-          getBoards(30, 0),
-          getMyProfile(),
-        ]);
+
+        // panggil loadProfile sekali
+        loadProfile();
+
+        const rows = await getBoards(30, 0);
         if (!cancelled) {
           setBoards(rows);
-          setFullName(profile?.full_name ?? "");
         }
       } catch (err: any) {
         if (!cancelled) {
           toast.error(err?.message ?? "Failed to load data");
           setBoards([]);
-          setFullName("");
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -67,7 +70,7 @@ export default function BoardsPage() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [loadProfile]);
 
   return (
     <div className="w-full min-h-screen px-10 pt-10">
