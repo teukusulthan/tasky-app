@@ -8,28 +8,47 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import type { Database } from "@/types/database.types";
-import { getBoards } from "@/services/board.services";
+import { getBoard, getBoards } from "@/services/board.services";
 import CreateBoardDialog from "@/components/CreateBoard";
+import { getMyProfile } from "@/services/profile.services";
 
 type Board = Database["public"]["Tables"]["boards"]["Row"];
 
 export default function BoardsPage() {
   const [boards, setBoards] = useState<Board[]>([]);
   const [loading, setLoading] = useState(true);
+  const [fullName, setFullName] = useState<string>("");
 
   useEffect(() => {
+    let cancelled = false;
+
     (async () => {
       try {
         setLoading(true);
-        const rows = await getBoards(30, 0);
-        setBoards(rows);
+
+        const [rows, profile] = await Promise.all([
+          getBoards(30, 0),
+          getMyProfile(),
+        ]);
+
+        if (!cancelled) {
+          setBoards(rows);
+          setFullName(profile?.full_name ?? "");
+        }
       } catch (err: any) {
-        toast.error(err?.message ?? "Failed to load boards");
-        setBoards([]);
+        if (!cancelled) {
+          toast.error(err?.message ?? "Failed to load data");
+          setBoards([]);
+          setFullName("");
+        }
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     })();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   return (
@@ -37,7 +56,7 @@ export default function BoardsPage() {
       <div className="flex flex-row justify-between h-20">
         <div>
           <h1 className="font-bold text-3xl">
-            Hello <span className="text-primary">Teuku Sulthan</span>.
+            Hello <span className="text-primary">{fullName}</span>.
           </h1>
           <h2 className="font-bold text-secondary text-xl">
             Here’s an overview of your boards.
