@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import supabase from "@/lib/supabase-client";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -11,27 +11,62 @@ import { Search, Plus, LogOut, UserRoundPen } from "lucide-react";
 import CreateBoardDialog from "./CreateBoard";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import type { Database } from "@/types/database.types";
+import { getMyProfile } from "@/services/profile.services";
 
 type Board = Database["public"]["Tables"]["boards"]["Row"];
 
 type NavbarProps = {
   onBoardCreated?: (board: Board) => void;
-  userName?: string;
 };
 
-export default function Navbar({
-  onBoardCreated,
-  userName = "Teuku Sulthan",
-}: NavbarProps) {
+type ProfileShape = {
+  full_name?: string | null;
+  avatar_url?: string | null;
+};
+
+export default function Navbar({ onBoardCreated }: NavbarProps) {
   const router = useRouter();
   const [signingOut, setSigningOut] = useState(false);
+  const [profile, setProfile] = useState<ProfileShape | null>(null);
+  const [loadingProfile, setLoadingProfile] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        setLoadingProfile(true);
+        const p = await getMyProfile();
+        if (!cancelled) setProfile(p ?? null);
+      } catch (e: any) {
+        if (!cancelled) {
+          setProfile(null);
+        }
+      } finally {
+        if (!cancelled) setLoadingProfile(false);
+      }
+    })();
+
+    const { data: sub } = supabase.auth.onAuthStateChange(async () => {
+      try {
+        const p = await getMyProfile();
+        setProfile(p ?? null);
+      } catch {
+        setProfile(null);
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      sub?.subscription?.unsubscribe();
+    };
+  }, []);
 
   const handleLogout = async () => {
     try {
       setSigningOut(true);
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
-
       toast.success("Logged out");
       router.push("/login");
       router.refresh();
@@ -42,8 +77,20 @@ export default function Navbar({
     }
   };
 
+  const displayName =
+    (profile?.full_name && profile.full_name.trim()) ||
+    (loadingProfile ? "Loading…" : "Guest");
+
+  const initials =
+    (displayName || "User")
+      .split(" ")
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((s) => s[0]?.toUpperCase() ?? "")
+      .join("") || "U";
+
   return (
-    <header className="sticky top-0 z-50 border-b border-b-accent/60 bg-background backdrop-blur">
+    <header className="sticky top-0 z-50 border-b border-b-accent/60 bg-background/80 backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-3">
         {/* Logo */}
         <div className="text-lg font-bold text-primary">
@@ -72,26 +119,30 @@ export default function Navbar({
 
           {/* User */}
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium">{userName}</span>
+            <span className="text-sm font-medium max-w-[160px] truncate">
+              {displayName}
+            </span>
             <Popover>
               <PopoverTrigger asChild>
                 <Avatar className="h-7 w-7 cursor-pointer">
-                  <AvatarImage src="" alt={userName} />
-                  <AvatarFallback>
-                    {userName
-                      .split(" ")
-                      .map((s) => s[0])
-                      .join("")
-                      .slice(0, 2)
-                      .toUpperCase()}
-                  </AvatarFallback>
+                  <AvatarImage
+                    src={profile?.avatar_url ?? ""}
+                    alt={displayName}
+                  />
+                  <AvatarFallback>{initials}</AvatarFallback>
                 </Avatar>
               </PopoverTrigger>
-              <PopoverContent className="bg-background border border-muted w-40">
+              <PopoverContent className="bg-background border border-muted w-44">
                 <div className="flex flex-col gap-1">
-                  <Button variant="ghost" className="justify-start gap-2">
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2"
+                    onClick={() => {
+                      router.push("/settings/profile");
+                    }}
+                  >
                     <UserRoundPen className="h-4 w-4" />
-                    Edit
+                    Edit Profile
                   </Button>
                   <Button
                     variant="ghost"
