@@ -6,9 +6,10 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import Link from "next/link";
 import { toast } from "sonner";
 import type { Database } from "@/types/database.types";
-import { getBoard, getBoards } from "@/services/board.services";
+import { getBoards } from "@/services/board.services";
 import CreateBoardDialog from "@/components/CreateBoard";
 import { getMyProfile } from "@/services/profile.services";
 
@@ -25,7 +26,6 @@ export default function BoardsPage() {
     (async () => {
       try {
         setLoading(true);
-
         const [rows, profile] = await Promise.all([
           getBoards(30, 0),
           getMyProfile(),
@@ -80,17 +80,16 @@ export default function BoardsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {boards.map((b) => (
-            <Card
-              key={b.id}
-              className="hover:bg-muted/30 hover:scale-105 transition-all duration-300"
-            >
-              <CardContent>
-                <CardTitle>{b.title}</CardTitle>
-                <CardDescription className="line-clamp-2">
-                  {b.description ?? "No description"}
-                </CardDescription>
-              </CardContent>
-            </Card>
+            <Link key={b.id} href={`/boards/${b.id}`} className="block">
+              <Card className="cursor-pointer hover:bg-muted/30 hover:scale-105 transition-all duration-300">
+                <CardContent>
+                  <CardTitle>{b.title}</CardTitle>
+                  <CardDescription className="line-clamp-2">
+                    {b.description ?? "No description"}
+                  </CardDescription>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

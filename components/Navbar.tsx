@@ -1,5 +1,10 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import supabase from "@/lib/supabase-client";
+
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Search, Plus, LogOut, UserRoundPen } from "lucide-react";
@@ -18,6 +23,25 @@ export default function Navbar({
   onBoardCreated,
   userName = "Teuku Sulthan",
 }: NavbarProps) {
+  const router = useRouter();
+  const [signingOut, setSigningOut] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      setSigningOut(true);
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast.success("Logged out");
+      router.push("/login");
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err?.message ?? "Failed to logout");
+    } finally {
+      setSigningOut(false);
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 border-b border-b-accent/60 bg-background backdrop-blur">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-3">
@@ -41,7 +65,7 @@ export default function Navbar({
             trigger={
               <Button variant="default" className="gap-2">
                 <Plus className="h-4 w-4" />
-                Create
+                Create Board
               </Button>
             }
           />
@@ -69,9 +93,14 @@ export default function Navbar({
                     <UserRoundPen className="h-4 w-4" />
                     Edit
                   </Button>
-                  <Button variant="ghost" className="justify-start gap-2">
+                  <Button
+                    variant="ghost"
+                    className="justify-start gap-2"
+                    onClick={handleLogout}
+                    disabled={signingOut}
+                  >
                     <LogOut className="h-4 w-4" />
-                    Logout
+                    {signingOut ? "Logging out..." : "Logout"}
                   </Button>
                 </div>
               </PopoverContent>
