@@ -93,10 +93,6 @@ export default function Navbar({ onBoardCreated }: NavbarProps) {
 
           {/* User */}
           <div className="flex items-center gap-2">
-            <span className="text-sm font-medium max-w-[160px] truncate">
-              {displayName}
-            </span>
-
             <Popover>
               <PopoverTrigger asChild>
                 <Avatar className="h-7 w-7 cursor-pointer">
